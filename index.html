@@ -74,10 +74,10 @@ select{font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1p
 .strip button{font-family:var(--word);font-weight:700;font-size:22px;padding:10px 4px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .strip button[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .stagebox{position:relative}
-.arrow{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:62%;max-height:150px;border:0;padding:0;background:transparent;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(20,30,60,.3))}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:30%;max-height:64px;min-height:40px;border:0;padding:0;background:transparent;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(20,30,60,.3))}
 .arrow::before{content:"";position:absolute;inset:0;background:rgba(255,255,255,.88)}
-.arrow.prev{left:6px}.arrow.prev::before{clip-path:polygon(100% 0,0 50%,100% 100%)}
-.arrow.next{right:6px}.arrow.next::before{clip-path:polygon(0 0,100% 50%,0 100%)}
+.arrow.prev{left:8px}.arrow.prev::before{clip-path:polygon(100% 0,0 50%,100% 100%)}
+.arrow.next{right:8px}.arrow.next::before{clip-path:polygon(0 0,100% 50%,0 100%)}
 .arrow:hover::before{background:#fff}
 .arrow:active{transform:translateY(-50%) scale(.92)}
 .arrow:disabled{display:none}
