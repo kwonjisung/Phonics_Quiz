@@ -210,11 +210,12 @@ const fmt = s => { const [y,m,d]=s.split('-').map(Number); const dt=new Date(y,m
 const $ = id => document.getElementById(id);
 
 let di = 0, wi = 0;
+// 첫 화면: 다가오는 시험. 오늘 시험은 오후 3시까지만 '다가오는 시험'으로 보고, 그 뒤엔 다음 시험.
+// 다가오는 시험이 없으면 목록의 마지막 날짜.
 (function initDay(){
-  let saved=null; try{saved=localStorage.getItem('wc-day')}catch(e){}
   const n=new Date(), today=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
-  const si=DAYS.findIndex(x=>x.d===saved);
-  if(si>=0) di=si; else { const up=DAYS.findIndex(x=>x.d>=today); di = up>=0?up:DAYS.length-1; }
+  const up=DAYS.findIndex(x=>x.d>today || (x.d===today && n.getHours()<15));
+  di = up>=0 ? up : DAYS.length-1;
 })();
 DAYS.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=fmt(x.d)+' · '+x.words.map(w=>w.w).join(', ');$('dateSel').appendChild(o)});
 
@@ -231,9 +232,7 @@ function render(){
   const sc=SCENES[it.w]; $('stage').style.background=sc.bg; $('scene').innerHTML=sc.inner; $('stageTitle').textContent=it.alt;
   $('sent').textContent=it.sent; $('ko').textContent=it.sko;
   $('strip').innerHTML=day.words.map((x,i)=>`<button data-i="${i}" aria-current="${i===wi}">${x.w}</button>`).join('');
-  $('prevCard').disabled=wi===0; $('nextCard').disabled=wi===2;
-  try{localStorage.setItem('wc-day',day.d)}catch(e){}
-}
+  $('prevCard').disabled=wi===0; $('nextCard').disabled=wi===2;}
 function say(t,r){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=r;speechSynthesis.speak(u);}catch(e){}}
 const cur=()=>DAYS[di].words[wi];
 $('sayWord').onclick=()=>say(cur().w,.8);
