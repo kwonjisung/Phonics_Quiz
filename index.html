@@ -59,6 +59,28 @@ select{font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1p
 .note{font-size:12px;color:var(--muted);margin:0;text-align:center}
 button:focus-visible,select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 svg *{transform-box:fill-box}
+/* 가로모드: 왼쪽 글자·문장, 오른쪽 그림 */
+@media (orientation: landscape) and (min-width: 560px){
+  body{padding-block:8px 10px}
+  .wrap{max-width:1000px;gap:10px}
+  header{flex-direction:row;align-items:center;flex-wrap:wrap;gap:10px}
+  h1{font-size:20px}
+  .datebar{flex:1;min-width:240px;padding:4px}
+  .day b{font-size:20px}
+  .day small{font-size:12px}
+  .icon{width:38px;height:38px}
+  header .note{flex:0 0 auto}
+  .card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-rows:auto auto auto 1fr}
+  .top,.word,.pron,.foot{grid-column:1}
+  .word{font-size:clamp(52px,15vh,110px);padding-top:6px}
+  .pron{margin-bottom:4px}
+  .foot{align-self:end;gap:8px;padding:8px 16px 12px}
+  .sent{font-size:clamp(16px,4.5vh,22px)}
+  .btn{padding:7px 12px}
+  .stage{grid-column:2;grid-row:1 / 5;width:100%;height:min(62vh,440px)}
+  .strip button{padding:6px 4px;font-size:19px}
+  .nav,.wrap > .note{display:none}
+}
 @media (prefers-reduced-motion: reduce){*{animation:none!important}}
 /* scene keyframes */
 @keyframes rock{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
