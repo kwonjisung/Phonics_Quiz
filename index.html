@@ -3,6 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#E8643A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="영단어 카드">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>하루 영단어 카드</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,6 +35,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);
 .wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 header{display:flex;flex-direction:column;gap:10px}
 h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;text-wrap:balance}
+.titlerow{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .datebar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px}
 .datebar .day{flex:1;min-width:0;text-align:center}
 .day b{display:block;font-family:var(--display);font-weight:400;font-size:26px;line-height:1.1}
@@ -125,7 +134,7 @@ svg *{transform-box:fill-box}
 
 <div class="wrap">
   <header>
-    <h1>하루 영단어 카드</h1>
+    <div class="titlerow"><h1>하루 영단어 카드</h1><button class="btn" id="fsBtn" hidden>⛶ 전체화면</button></div>
     <div class="datebar">
       <button class="icon" id="prevDay" aria-label="이전 시험 날짜">‹</button>
       <div class="day"><b id="dayLabel">10/28 (수)</b><small id="daySub">시험 날짜</small></div>
@@ -143,9 +152,9 @@ svg *{transform-box:fill-box}
     <div class="foot">
       <div><p class="sent" id="sent"></p><p class="ko" id="ko"></p></div>
       <div class="btns">
-        <button class="btn main" id="sayWord">🔊 단어</button>
+        <button class="btn main" id="sayWord">🔊 단어 3번</button>
+        <button class="btn" id="saySlow">천천히 3번</button>
         <button class="btn" id="saySent">문장 듣기</button>
-        <button class="btn" id="saySlow">천천히</button>
       </div>
     </div>
   </article>
@@ -233,11 +242,27 @@ function render(){
   $('sent').textContent=it.sent; $('ko').textContent=it.sko;
   $('strip').innerHTML=day.words.map((x,i)=>`<button data-i="${i}" aria-current="${i===wi}">${x.w}</button>`).join('');
   $('prevCard').disabled=wi===0; $('nextCard').disabled=wi===2;}
-function say(t,r){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=r;speechSynthesis.speak(u);}catch(e){}}
+// 발음: 미리 만든 mp3 재생 (단어는 3번 연속). 파일을 못 열면 브라우저 음성으로 대신 읽기.
+const player=new Audio(); player.preload='auto';
+function say(t,r,times){try{speechSynthesis.cancel();for(let i=0;i<(times||1);i++){const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=r;speechSynthesis.speak(u);}}catch(e){}}
+function play(file,fallback){
+  document.querySelectorAll('.btn.playing').forEach(b=>b.classList.remove('playing'));
+  player.pause(); player.src='audio/'+encodeURIComponent(file)+'.mp3'; player.currentTime=0;
+  const p=player.play(); if(p&&p.catch) p.catch(fallback);
+}
+player.onerror=()=>{};
 const cur=()=>DAYS[di].words[wi];
-$('sayWord').onclick=()=>say(cur().w,.8);
-$('saySent').onclick=()=>say(cur().sent,.8);
-$('saySlow').onclick=()=>say(cur().w,.45);
+$('sayWord').onclick=()=>play(cur().w,()=>say(cur().w,.8,3));
+$('saySlow').onclick=()=>play(cur().w+'-slow',()=>say(cur().w,.45,3));
+$('saySent').onclick=()=>play(cur().w+'-sentence',()=>say(cur().sent,.8,1));
+// 전체화면 (지원하는 기기에서만 버튼 표시)
+const root=document.documentElement;
+if(document.fullscreenEnabled||document.webkitFullscreenEnabled){$('fsBtn').hidden=false}
+$('fsBtn').onclick=()=>{
+  const on=document.fullscreenElement||document.webkitFullscreenElement;
+  try{ if(on){(document.exitFullscreen||document.webkitExitFullscreen).call(document)} else {const r=(root.requestFullscreen||root.webkitRequestFullscreen).call(root); if(r&&r.catch) r.catch(()=>{});} }catch(e){}
+};
+document.addEventListener('fullscreenchange',()=>{$('fsBtn').textContent=document.fullscreenElement?'⛶ 나가기':'⛶ 전체화면'});
 $('prevDay').onclick=()=>{if(di>0){di--;wi=0;render()}};
 $('nextDay').onclick=()=>{if(di<DAYS.length-1){di++;wi=0;render()}};
 $('dateSel').onchange=e=>{di=+e.target.value;wi=0;render()};
