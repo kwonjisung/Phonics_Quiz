@@ -203,6 +203,36 @@ const SCENES = {
   mole: S('#FAEEDA', `<defs><clipPath id="mc"><rect x="0" y="0" width="340" height="154"/></clipPath></defs><rect x="0" y="152" width="340" height="48" fill="#C0DD97"/><g clip-path="url(#mc)"><g style="animation:up 2.6s ease-in-out infinite"><ellipse cx="170" cy="146" rx="24" ry="30" fill="#854F0B"/><ellipse cx="170" cy="136" rx="7" ry="5" fill="#ED93B1"/><g style="animation:blink 2.6s infinite;transform-origin:center"><circle cx="161" cy="126" r="3" fill="#2C2C2A"/><circle cx="179" cy="126" r="3" fill="#2C2C2A"/></g><ellipse cx="148" cy="148" rx="8" ry="5" fill="#BA7517"/><ellipse cx="192" cy="148" rx="8" ry="5" fill="#BA7517"/></g></g><ellipse cx="170" cy="154" rx="34" ry="8" fill="#412402"/>`)
 };
 
+// 끝부분 강조: [cx, cy, rx, ry, 주기(초), 시작%, 끝%, 화살표 위로?]
+const FOCUS = {
+  cot:[170,140,72,42,4,62,92], hot:[170,112,72,58,4,62,92], dot:[70,130,24,24,3,70,84], all:[170,162,152,34,4,62,92],
+  had:[220,166,66,24,3,62,88], by:[165,135,62,44,3,50,82], cake:[170,124,78,66,4,62,92], lake:[170,150,138,42,4,62,92],
+  game:[172,150,88,40,4,62,92], from:[70,128,34,62,3,55,85], that:[285,62,32,32,4,62,92], this:[195,126,32,30,4,62,92],
+  hide:[170,148,72,42,3,86,98], ride:[170,150,92,46,3.5,46,62], bike:[170,140,104,52,4,62,92], use:[205,92,28,52,4,62,92],
+  if:[170,56,62,32,3,55,88], out:[200,138,34,32,2.6,58,84], line:[175,115,148,58,3,62,88], nine:[170,108,152,74,4.5,73,84],
+  bite:[232,112,30,32,2.6,55,90], will:[303,150,36,42,2.8,64,84], up:[170,124,62,52,1.2*5,55,90,true], about:[212,92,122,64,4,62,92],
+  hole:[238,152,42,18,3,60,90], dome:[170,118,54,34,3.2,58,88], mole:[170,124,36,38,2.6,36,58]
+};
+(function(){
+  const css=Object.entries(FOCUS).map(([w,[,,,,d,a,b]])=>`@keyframes fx_${w}{0%,${a}%{opacity:0;transform:scale(.85)}${Math.min(a+5,b)}%,${b}%{opacity:1;transform:scale(1)}${Math.min(b+5,100)}%,100%{opacity:0;transform:scale(1)}}`).join('');
+  const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+})();
+function focusSvg(w){
+  const f=FOCUS[w]; if(!f) return '';
+  const [cx,cy,rx,ry,d,,,up]=f;
+  let fx,fy,tx,ty;
+  if(up){ fx=cx+rx+20; fy=cy+10; tx=fx; ty=14; } else { fx=170; fy=6; tx=cx; ty=cy-ry-5; if(ty<fy+20){ fx=cx<170?cx+rx+40:cx-rx-40; fy=ty+40; tx=cx+(fx>cx?rx+4:-rx-4); ty=cy; } }
+  const mx=(fx+tx)/2+(up?0:(tx>=fx?-30:30)), my=(fy+ty)/2;
+  const ang=Math.atan2(ty-my,tx-mx), L=12;
+  const head=`${tx},${ty} ${tx-L*Math.cos(ang-.45)},${ty-L*Math.sin(ang-.45)} ${tx-L*Math.cos(ang+.45)},${ty-L*Math.sin(ang+.45)}`;
+  const path=`M${fx} ${fy} Q${mx} ${my} ${tx} ${ty}`;
+  return `<g style="animation:fx_${w} ${d}s infinite;transform-origin:${cx}px ${cy}px;transform-box:view-box" aria-hidden="true">
+<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#FF7A45" fill-opacity=".12" stroke="#fff" stroke-width="7" stroke-opacity=".75"/>
+<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="#F0501A" stroke-width="3.5" stroke-dasharray="9 7" style="animation:dash .7s linear infinite"/>
+<path d="${path}" fill="none" stroke="#fff" stroke-width="7" stroke-opacity=".75" stroke-linecap="round"/>
+<path d="${path}" fill="none" stroke="#F0501A" stroke-width="3.5" stroke-dasharray="8 6" stroke-linecap="round" style="animation:dash .7s linear infinite"/>
+<polygon points="${head}" fill="#F0501A" stroke="#fff" stroke-width="2"/></g>`;
+}
 const W = (w,pron,ko,sent,sko,hl=[],alt) => ({w,pron,ko,sent,sko,hl,alt});
 const DAYS = [
   {d:'2026-09-30', pat:'-ot 소리 가족', words:[W('cot','캇','아기 침대','The baby is in the cot.','아기가 아기 침대에 있어요.',[1,2],'아기 침대가 흔들흔들'),W('hot','핫','뜨거운','The soup is hot!','수프가 뜨거워요!',[1,2],'뜨거운 수프에서 김이 나는 장면'),W('dot','닷','점','I see a red dot.','빨간 점이 보여요.',[1,2],'알록달록 점이 뿅뿅 나타나는 장면')]},
@@ -239,7 +269,7 @@ function render(){
   const w=$('word'); w.className='word'+(it.w==='up'?' rise':'');
   w.innerHTML=[...it.w].map((c,i)=>`<span${it.hl.includes(i)?' class="hl"':''}>${c}</span>`).join('');
   $('pron').textContent=`[${it.pron}] · ${it.ko}`;
-  const sc=SCENES[it.w]; $('stage').style.background=sc.bg; $('scene').innerHTML=sc.inner; $('stageTitle').textContent=it.alt;
+  const sc=SCENES[it.w]; $('stage').style.background=sc.bg; $('scene').innerHTML=sc.inner+focusSvg(it.w); $('stageTitle').textContent=it.alt;
   $('sent').textContent=it.sent; $('ko').textContent=it.sko;
   $('strip').innerHTML=day.words.map((x,i)=>`<button data-i="${i}" aria-current="${i===wi}">${x.w}</button>`).join('');
   $('prevCard').disabled=wi===0; $('nextCard').disabled=wi===2;}
