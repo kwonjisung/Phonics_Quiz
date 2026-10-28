@@ -155,7 +155,7 @@ svg *{transform-box:fill-box}
   <article class="card" aria-live="polite">
     <div class="top"><span class="chip" id="chip">o_e</span><span class="count" id="count">1 / 3</span></div>
     <div class="wordbox"><div class="word" id="word">will</div>
-      <div class="corner"><button class="say" id="sayWord" aria-label="단어 3번 듣기">🔊<span>×3</span></button><button class="say soft" id="saySlow" aria-label="천천히 3번 듣기">🐢</button></div></div>
+      <div class="corner"><button class="say" id="sayWord" aria-label="단어 3번 듣기">🔊<span>×3</span></button></div></div>
     <p class="pron" id="pron">[윌] · ~할 거야</p>
     <svg class="stage" id="stage" viewBox="0 0 340 200" role="img"><title id="stageTitle"></title><g id="scene"></g></svg>
     <div class="foot">
@@ -286,7 +286,6 @@ function play(file,fallback){
 player.onerror=()=>{};
 const cur=()=>DAYS[di].words[wi];
 $('sayWord').onclick=()=>play(cur().w,()=>say(cur().w,.8,3));
-$('saySlow').onclick=()=>play(cur().w+'-slow',()=>say(cur().w,.45,3));
 $('saySent').onclick=()=>play(cur().w+'-sentence',()=>say(cur().sent,.8,1));
 // 전체화면 (지원하는 기기에서만 버튼 표시)
 const root=document.documentElement;
