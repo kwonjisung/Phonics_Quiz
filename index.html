@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>하루 영단어 카드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Jua&display=swap">
+<style>
+/* Layout: one slide-card per word, PPT-style, with a date bar on top and a 3-word strip below */
+:root{
+  --bg:#F3F6FB; --surface:#FFFFFF; --ink:#1F2A44; --muted:#5D6886; --line:#DCE3EF;
+  --accent:#E8643A; --accent-soft:#FDE8DF; --brand:#3A5BD9; --brand-soft:#E4EAFC;
+  --display:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --word:"Andika","Comic Sans MS",system-ui,sans-serif;
+  --body:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141A29; --surface:#1E2638; --ink:#EEF2FA; --muted:#A3AECB; --line:#2E3850;
+  --accent:#FF8A5E; --accent-soft:#3A2620; --brand:#8FA6FF; --brand-soft:#26304F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141A29; --surface:#1E2638; --ink:#EEF2FA; --muted:#A3AECB; --line:#2E3850;
+  --accent:#FF8A5E; --accent-soft:#3A2620; --brand:#8FA6FF; --brand-soft:#26304F; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 28px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-direction:column;gap:10px}
+h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;text-wrap:balance}
+.datebar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px}
+.datebar .day{flex:1;min-width:0;text-align:center}
+.day b{display:block;font-family:var(--display);font-weight:400;font-size:26px;line-height:1.1}
+.day small{color:var(--muted);font-size:13px}
+.icon{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer;display:grid;place-items:center}
+.icon:disabled{opacity:.35;cursor:default}
+select{font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 0;gap:8px}
+.chip{font-size:12px;letter-spacing:.04em;padding:4px 10px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-weight:600}
+.count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.word{font-family:var(--word);font-weight:700;font-size:clamp(68px,20vw,104px);line-height:1;text-align:center;padding:10px 0 2px;letter-spacing:.02em}
+.word .hl{color:var(--accent)}
+.word.rise span{display:inline-block;animation:rise 2.2s ease-in-out infinite}
+.word.rise span:nth-child(2){animation-delay:.2s}
+@keyframes rise{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}}
+.pron{text-align:center;color:var(--muted);font-size:15px;margin:0 0 10px}
+.stage{display:block;width:100%;height:auto}
+.foot{padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.sent{font-family:var(--word);font-size:21px;font-weight:700;margin:0}
+.ko{font-size:14px;color:var(--muted);margin:2px 0 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.btn.main{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.strip button{font-family:var(--word);font-weight:700;font-size:22px;padding:10px 4px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.strip button[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.nav{display:flex;justify-content:space-between;gap:8px}
+.nav .btn{flex:1}
+.note{font-size:12px;color:var(--muted);margin:0;text-align:center}
+button:focus-visible,select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+svg *{transform-box:fill-box}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+/* scene keyframes */
+@keyframes rock{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes zz{0%{transform:translate(0,0);opacity:0}30%{opacity:1}100%{transform:translate(18px,-40px);opacity:0}}
+@keyframes steam{0%{transform:translateY(10px);opacity:0}40%{opacity:.9}100%{transform:translateY(-40px);opacity:0}}
+@keyframes popin{0%,8%{transform:scale(0)}20%,85%{transform:scale(1)}100%{transform:scale(0)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-46px)}}
+@keyframes eat{0%,25%{transform:scale(1)}45%{transform:scale(.6)}65%,90%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes fadeT{0%,55%{opacity:0}65%,88%{opacity:1}100%{opacity:0}}
+@keyframes slidein{0%,10%{transform:translateX(150px)}45%,85%{transform:translateX(0)}100%{transform:translateX(150px)}}
+@keyframes flick{0%,100%{transform:scaleY(1) rotate(-6deg)}50%{transform:scaleY(1.25) rotate(6deg)}}
+@keyframes wave{0%{transform:translateX(0)}100%{transform:translateX(-40px)}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}
+@keyframes roll{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(0,-50px) rotate(180deg)}100%{transform:translate(0,0) rotate(360deg)}}
+@keyframes give{0%,15%{transform:translateX(0)}55%,85%{transform:translateX(150px)}100%{transform:translateX(0)}}
+@keyframes dash{0%{stroke-dashoffset:30}100%{stroke-dashoffset:0}}
+@keyframes tw{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1.2);opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes peek{0%,15%,85%,100%{transform:translateY(60px)}35%,65%{transform:translateY(0)}}
+@keyframes drive{0%{transform:translateX(-200px)}100%{transform:translateX(360px)}}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes scoop{0%,100%{transform:rotate(20deg) translateY(0)}50%{transform:rotate(-30deg) translateY(-14px)}}
+@keyframes rain{0%{transform:translateY(-30px);opacity:0}20%{opacity:1}100%{transform:translateY(120px);opacity:0}}
+@keyframes umb{0%,25%{transform:scaleX(.15)}40%,90%{transform:scaleX(1)}100%{transform:scaleX(.15)}}
+@keyframes jumpout{0%,20%{transform:translate(0,40px)}40%{transform:translate(40px,-40px)}55%,85%{transform:translate(90px,0)}100%{transform:translate(0,40px)}}
+@keyframes draw{0%,10%{stroke-dashoffset:400}60%,90%{stroke-dashoffset:0}100%{stroke-dashoffset:400}}
+@keyframes ball{0%,25%{transform:translate(0,0)}45%{transform:translate(90px,-30px)}62%{transform:translate(180px,0)}75%,100%{transform:translate(196px,0)}}
+@keyframes leg{0%,15%{transform:rotate(0)}25%{transform:rotate(-55deg)}38%,100%{transform:rotate(0)}}
+@keyframes net{0%,62%,80%,100%{transform:scale(1)}68%{transform:scale(1.08)}}
+@keyframes sky{0%{transform:translateY(-60px)}100%{transform:translateY(270px)}}
+@keyframes ln{0%{transform:translateY(-10px);opacity:0}30%{opacity:1}100%{transform:translateY(50px);opacity:0}}
+@keyframes arm{0%,100%{transform:rotate(0)}50%{transform:rotate(-18deg)}}
+@keyframes mo{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+@keyframes rollin{0%,10%{transform:translate(0,0) rotate(0);opacity:1}45%{transform:translate(166px,0) rotate(360deg);opacity:1}58%,100%{transform:translate(170px,22px) scale(.3);opacity:0}}
+@keyframes drop{0%,15%{transform:translateY(-90px);opacity:0}20%{opacity:1}40%{transform:translateY(0)}48%{transform:translateY(-12px)}55%,90%{transform:translateY(0);opacity:1}100%{opacity:0}}
+@keyframes flag{0%,100%{transform:skewY(0)}50%{transform:skewY(-12deg)}}
+@keyframes up{0%,15%{transform:translateY(50px)}35%,60%{transform:translateY(0)}80%,100%{transform:translateY(50px)}}
+@keyframes blink{0%,45%,55%,100%{transform:scaleY(1)}50%{transform:scaleY(.1)}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>하루 영단어 카드</h1>
+    <div class="datebar">
+      <button class="icon" id="prevDay" aria-label="이전 시험 날짜">‹</button>
+      <div class="day"><b id="dayLabel">10/28 (수)</b><small id="daySub">시험 날짜</small></div>
+      <button class="icon" id="nextDay" aria-label="다음 시험 날짜">›</button>
+    </div>
+    <label class="note" for="dateSel" style="display:flex;gap:8px;align-items:center;justify-content:center">날짜 바로 고르기
+      <select id="dateSel"></select></label>
+  </header>
+
+  <article class="card" aria-live="polite">
+    <div class="top"><span class="chip" id="chip">o_e</span><span class="count" id="count">1 / 3</span></div>
+    <div class="word" id="word">will</div>
+    <p class="pron" id="pron">[윌] · ~할 거야</p>
+    <svg class="stage" id="stage" viewBox="0 0 340 200" role="img"><title id="stageTitle"></title><g id="scene"></g></svg>
+    <div class="foot">
+      <div><p class="sent" id="sent"></p><p class="ko" id="ko"></p></div>
+      <div class="btns">
+        <button class="btn main" id="sayWord">🔊 단어</button>
+        <button class="btn" id="saySent">문장 듣기</button>
+        <button class="btn" id="saySlow">천천히</button>
+      </div>
+    </div>
+  </article>
+
+  <div class="strip" id="strip"></div>
+  <div class="nav"><button class="btn" id="prevCard">‹ 이전 단어</button><button class="btn" id="nextCard">다음 단어 ›</button></div>
+  <p class="note">주황색 글자는 같은 소리 규칙이에요. 끝에 e가 붙으면 앞 모음이 자기 이름 소리로 길어져요.</p>
+</div>
+
+<script>
+const S = (bg, inner) => ({bg, inner});
+const kid = (x, c1, c2, extra='') => `<circle cx="${x}" cy="112" r="14" fill="${c1}"/><rect x="${x-9}" y="127" width="18" height="30" rx="7" fill="${c2}"/><line x1="${x-4}" y1="155" x2="${x-7}" y2="180" stroke="${c1}" stroke-width="6" stroke-linecap="round"/><line x1="${x+4}" y1="155" x2="${x+7}" y2="180" stroke="${c1}" stroke-width="6" stroke-linecap="round"/>${extra}`;
+const ground = c => `<line x1="10" y1="182" x2="330" y2="182" stroke="${c}" stroke-width="2"/>`;
+const sb = (cx,cy,r,c) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${c}" stroke-width="2"/><path d="M${cx} ${cy-r*.6}l${r*.5} ${r*.38}-${r*.18} ${r*.58}h-${r*.64}l-${r*.18}-${r*.58}z" fill="${c}"/>`;
+const star = (x,y,s,c) => `<path transform="translate(${x} ${y}) scale(${s})" d="M0-10l3 6.5 7 1-5 5 1.2 7L0 6l-6.2 3.5L-5 2.5l-5-5 7-1z" fill="${c}"/>`;
+const brick = (x,y,c) => `<rect x="${x}" y="${y}" width="34" height="18" rx="2" fill="${c}"/><rect x="${x+5}" y="${y-6}" width="8" height="6" rx="1" fill="${c}"/><rect x="${x+21}" y="${y-6}" width="8" height="6" rx="1" fill="${c}"/>`;
+
+const SCENES = {
+  cot: S('#E6F1FB', `${ground('#B5D4F4')}<g style="animation:rock 2s ease-in-out infinite;transform-origin:50% 100%"><rect x="110" y="110" width="120" height="58" rx="6" fill="#fff" stroke="#185FA5" stroke-width="3"/><path d="M130 110V168M150 110V168M170 110V168M190 110V168M210 110V168" stroke="#B5D4F4" stroke-width="3"/><circle cx="150" cy="140" r="12" fill="#F5C4B3"/><rect x="160" y="132" width="52" height="20" rx="8" fill="#85B7EB"/><path d="M110 168Q170 190 230 168" fill="none" stroke="#185FA5" stroke-width="4"/></g><text x="200" y="96" font-size="22" font-weight="700" fill="#185FA5" style="animation:zz 2.4s infinite">z</text><text x="212" y="90" font-size="16" font-weight="700" fill="#185FA5" style="animation:zz 2.4s .8s infinite">z</text>`),
+  hot: S('#FCEBEB', `${ground('#F7C1C1')}<g fill="none" stroke="#E24B4A" stroke-width="5" stroke-linecap="round"><path d="M140 110q-10-14 0-28t0-28" style="animation:steam 1.8s infinite"/><path d="M170 110q-10-14 0-28t0-28" style="animation:steam 1.8s .5s infinite"/><path d="M200 110q-10-14 0-28t0-28" style="animation:steam 1.8s 1s infinite"/></g><path d="M115 120h110q0 50-55 56q-55-6-55-56z" fill="#F09595" stroke="#A32D2D" stroke-width="3"/><ellipse cx="170" cy="120" rx="55" ry="8" fill="#FAC775"/><text x="270" y="150" font-size="34" style="animation:pulse 1s infinite;transform-origin:center">🔥</text>`),
+  dot: S('#FAEEDA', ['#E24B4A','#378ADD','#1D9E75','#EF9F27','#7F77DD','#D4537E'].map((c,i)=>`<circle cx="${70+i*40}" cy="${i%2?90:130}" r="15" fill="${c}" style="animation:popin 3s ${i*.3}s infinite;transform-origin:center"/>`).join('')),
+  all: S('#EAF3DE', `${ground('#97C459')}` + ['#E24B4A','#378ADD','#EF9F27','#1D9E75','#7F77DD'].map((c,i)=>`<circle cx="${70+i*50}" cy="164" r="16" fill="${c}" style="animation:bounce .9s ${i*.12}s ease-in-out infinite"/>`).join('') + `<text x="170" y="50" text-anchor="middle" font-size="18" font-weight="700" fill="#27500A">다 같이 통통!</text>`),
+  had: S('#FBEAF0', `${ground('#F4C0D1')}${kid(80,'#993556','#D4537E')}<ellipse cx="220" cy="170" rx="56" ry="10" fill="#fff" stroke="#D4537E" stroke-width="2"/><g style="animation:eat 3s infinite;transform-origin:50% 100%"><path d="M200 168v-34q20-22 40 0v34z" fill="#ED93B1" stroke="#993556" stroke-width="2"/></g><text x="220" y="120" text-anchor="middle" font-size="20" font-weight="700" fill="#72243E" style="animation:fadeT 3s infinite">냠! 다 먹었다</text>`),
+  by: S('#EEEDFE', `${ground('#AFA9EC')}<rect x="90" y="150" width="160" height="12" rx="4" fill="#534AB7"/><rect x="100" y="162" width="8" height="20" fill="#534AB7"/><rect x="232" y="162" width="8" height="20" fill="#534AB7"/><circle cx="140" cy="112" r="14" fill="#534AB7"/><rect x="131" y="127" width="18" height="24" rx="7" fill="#7F77DD"/><g style="animation:slidein 3s ease-in-out infinite"><circle cx="190" cy="112" r="14" fill="#D85A30"/><rect x="181" y="127" width="18" height="24" rx="7" fill="#F0997B"/></g><text x="165" y="80" text-anchor="middle" font-size="22" style="animation:pulse 1.2s infinite;transform-origin:center">💜</text>`),
+  cake: S('#FBEAF0', `${ground('#F4C0D1')}<rect x="110" y="130" width="120" height="50" rx="8" fill="#ED93B1"/><rect x="125" y="96" width="90" height="38" rx="8" fill="#F4C0D1"/><path d="M110 140q15 10 30 0t30 0 30 0 30 0" fill="none" stroke="#fff" stroke-width="5"/>` + [145,170,195].map((x,i)=>`<rect x="${x-3}" y="74" width="6" height="22" fill="#378ADD"/><ellipse cx="${x}" cy="66" rx="5" ry="9" fill="#EF9F27" style="animation:flick .5s ${i*.15}s infinite;transform-origin:50% 100%"/>`).join('')),
+  lake: S('#E1F5EE', `<path d="M40 120 Q170 90 300 120 L300 190 L40 190 Z" fill="#5DCAA5"/><g style="animation:wave 2s linear infinite"><path d="M40 140q20-8 40 0t40 0 40 0 40 0 40 0 40 0 40 0" fill="none" stroke="#E1F5EE" stroke-width="3"/><path d="M60 165q20-8 40 0t40 0 40 0 40 0 40 0 40 0" fill="none" stroke="#E1F5EE" stroke-width="3"/></g><g style="animation:bob 1.4s ease-in-out infinite;transform-origin:center"><ellipse cx="170" cy="122" rx="28" ry="14" fill="#FAC775"/><circle cx="190" cy="100" r="11" fill="#FAC775"/><path d="M199 100l12 3-12 3z" fill="#D85A30"/><circle cx="193" cy="97" r="2" fill="#2C2C2A"/></g>`),
+  game: S('#E6F1FB', `${ground('#B5D4F4')}<g style="animation:roll 1.4s ease-in-out infinite"><rect x="110" y="128" width="48" height="48" rx="9" fill="#fff" stroke="#185FA5" stroke-width="3"/><circle cx="122" cy="140" r="4" fill="#185FA5"/><circle cx="134" cy="152" r="4" fill="#185FA5"/><circle cx="146" cy="164" r="4" fill="#185FA5"/></g><g style="animation:roll 1.4s .35s ease-in-out infinite"><rect x="186" y="128" width="48" height="48" rx="9" fill="#fff" stroke="#E24B4A" stroke-width="3"/><circle cx="198" cy="140" r="4" fill="#E24B4A"/><circle cx="222" cy="140" r="4" fill="#E24B4A"/><circle cx="198" cy="164" r="4" fill="#E24B4A"/><circle cx="222" cy="164" r="4" fill="#E24B4A"/></g>`),
+  from: S('#FAEEDA', `${ground('#FAC775')}<circle cx="70" cy="92" r="17" fill="#854F0B"/><rect x="59" y="110" width="22" height="46" rx="8" fill="#BA7517"/><line x1="64" y1="156" x2="61" y2="180" stroke="#854F0B" stroke-width="7" stroke-linecap="round"/><line x1="76" y1="156" x2="79" y2="180" stroke="#854F0B" stroke-width="7" stroke-linecap="round"/><text x="70" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#633806">엄마</text>${kid(270,'#185FA5','#378ADD')}<g style="animation:give 3s ease-in-out infinite"><rect x="90" y="122" width="30" height="26" rx="3" fill="#E24B4A"/><rect x="102" y="122" width="6" height="26" fill="#FAC775"/><path d="M105 122q-10-12-14 0M105 122q10-12 14 0" fill="none" stroke="#FAC775" stroke-width="3"/></g>`),
+  that: S('#EEEDFE', `${ground('#AFA9EC')}${kid(60,'#534AB7','#7F77DD',`<line x1="69" y1="132" x2="96" y2="118" stroke="#534AB7" stroke-width="5" stroke-linecap="round"/>`)}<line x1="104" y1="114" x2="268" y2="66" stroke="#7F77DD" stroke-width="3" stroke-dasharray="8 7" style="animation:dash .6s linear infinite"/><g style="animation:tw 1.2s infinite;transform-origin:center">${star(285,60,2,'#EF9F27')}</g><text x="285" y="104" text-anchor="middle" font-size="13" fill="#3C3489">저~기 멀리</text>`),
+  this: S('#E1F5EE', `${ground('#5DCAA5')}${kid(150,'#0F6E56','#1D9E75',`<line x1="158" y1="134" x2="180" y2="138" stroke="#0F6E56" stroke-width="5" stroke-linecap="round"/>`)}<g style="animation:pulse 1.1s infinite;transform-origin:center">${brick(178,128,'#E24B4A')}</g><text x="200" y="104" text-anchor="middle" font-size="13" fill="#085041">바로 여기, 내 손에</text>`),
+  hide: S('#EAF3DE', `<defs><clipPath id="hc"><rect x="0" y="0" width="340" height="120"/></clipPath></defs>${ground('#97C459')}<g clip-path="url(#hc)"><g style="animation:peek 3s ease-in-out infinite"><circle cx="170" cy="96" r="16" fill="#3B6D11"/><circle cx="164" cy="94" r="2.5" fill="#fff"/><circle cx="176" cy="94" r="2.5" fill="#fff"/><path d="M150 84l-6-8M190 84l6-8" stroke="#3B6D11" stroke-width="4" stroke-linecap="round"/></g></g><rect x="110" y="118" width="120" height="64" rx="4" fill="#BA7517"/><path d="M110 118l20-14h80l20 14" fill="#EF9F27"/><text x="270" y="80" font-size="16" font-weight="700" fill="#27500A">어디 있지?</text>`),
+  ride: S('#E6F1FB', `${ground('#85B7EB')}<g style="animation:drive 3.5s linear infinite"><rect x="0" y="118" width="140" height="56" rx="12" fill="#EF9F27"/><rect x="12" y="128" width="26" height="20" rx="3" fill="#E6F1FB"/><rect x="46" y="128" width="26" height="20" rx="3" fill="#E6F1FB"/><rect x="80" y="128" width="26" height="20" rx="3" fill="#E6F1FB"/><circle cx="59" cy="138" r="7" fill="#185FA5"/><rect x="112" y="128" width="20" height="30" rx="3" fill="#E6F1FB"/><g style="animation:spin .5s linear infinite;transform-origin:center"><circle cx="32" cy="176" r="12" fill="#2C2C2A"/><rect x="30" y="166" width="4" height="20" fill="#888780"/></g><g style="animation:spin .5s linear infinite;transform-origin:center"><circle cx="110" cy="176" r="12" fill="#2C2C2A"/><rect x="108" y="166" width="4" height="20" fill="#888780"/></g></g>`),
+  bike: S('#FAECE7', `${ground('#F0997B')}<g style="animation:bob .6s ease-in-out infinite"><g style="animation:spin .7s linear infinite;transform-origin:center"><circle cx="110" cy="152" r="28" fill="none" stroke="#712B13" stroke-width="5"/><path d="M110 124V180M82 152H138" stroke="#F0997B" stroke-width="2"/></g><g style="animation:spin .7s linear infinite;transform-origin:center"><circle cx="230" cy="152" r="28" fill="none" stroke="#712B13" stroke-width="5"/><path d="M230 124V180M202 152H258" stroke="#F0997B" stroke-width="2"/></g><path d="M110 152L150 110H205L230 152M150 110L170 152L205 110M205 110L198 92h18" fill="none" stroke="#D85A30" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><rect x="138" y="100" width="26" height="8" rx="4" fill="#712B13"/></g>${[40,60,280,300].map((x,i)=>`<line x1="${x}" y1="${130+i%2*20}" x2="${x-18}" y2="${130+i%2*20}" stroke="#F0997B" stroke-width="3" stroke-linecap="round"/>`).join('')}`),
+  use: S('#FAEEDA', `${ground('#FAC775')}<path d="M100 138h120q0 40-60 44q-60-4-60-44z" fill="#FAC775" stroke="#854F0B" stroke-width="3"/><ellipse cx="160" cy="138" rx="60" ry="8" fill="#EF9F27"/><g style="animation:scoop 1.6s ease-in-out infinite;transform-origin:0% 100%"><rect x="200" y="62" width="10" height="70" rx="5" fill="#888780"/><ellipse cx="205" cy="58" rx="15" ry="20" fill="#B4B2A9"/></g>`),
+  if: S('#E6F1FB', `${ground('#85B7EB')}` + [70,110,150,190,230,270].map((x,i)=>`<line x1="${x}" y1="20" x2="${x-4}" y2="36" stroke="#378ADD" stroke-width="3" stroke-linecap="round" style="animation:rain 1s ${i*.17}s linear infinite"/>`).join('') + `${kid(170,'#185FA5','#378ADD')}<line x1="170" y1="62" x2="170" y2="128" stroke="#185FA5" stroke-width="3"/><g style="animation:umb 3s ease-in-out infinite;transform-origin:50% 100%"><path d="M118 72Q170 20 222 72Q209 64 196 72Q183 64 170 72Q157 64 144 72Q131 64 118 72Z" fill="#E24B4A"/></g><text x="290" y="160" text-anchor="middle" font-size="13" fill="#0C447C">비가 오면?</text>`),
+  out: S('#FAEEDA', `${ground('#FAC775')}<g style="animation:jumpout 2.6s ease-in-out infinite"><ellipse cx="110" cy="150" rx="20" ry="14" fill="#888780"/><circle cx="110" cy="128" r="13" fill="#888780"/><path d="M100 120l-2-12 9 7M120 120l2-12-9 7" fill="#888780"/><circle cx="105" cy="127" r="2" fill="#2C2C2A"/><circle cx="115" cy="127" r="2" fill="#2C2C2A"/></g><path d="M70 130h80v52H70z" fill="#BA7517"/><path d="M70 130l-14-16M150 130l14-16" stroke="#854F0B" stroke-width="5" stroke-linecap="round"/><text x="260" y="100" text-anchor="middle" font-size="18" font-weight="700" fill="#633806">밖으로 폴짝!</text>`),
+  line: S('#EAF3DE', `<path d="M40 150 C100 60 160 190 220 100 S300 120 310 80" fill="none" stroke="#3B6D11" stroke-width="7" stroke-linecap="round" stroke-dasharray="400" style="animation:draw 3s ease-in-out infinite"/><circle cx="40" cy="150" r="6" fill="#3B6D11"/>`),
+  nine: S('#26215C', Array.from({length:9},(_,i)=>`<g style="animation:popin 4.5s ${i*.3}s infinite;transform-origin:center">${star(50+(i%5)*60,i<5?70:140,1.8,'#FAC775')}<text x="${50+(i%5)*60}" y="${(i<5?70:140)+38}" text-anchor="middle" font-size="13" fill="#CECBF6">${i+1}</text></g>`).join('')),
+  bite: S('#FCEBEB', `${ground('#F7C1C1')}<path d="M170 82q-6-18 8-22" fill="none" stroke="#854F0B" stroke-width="4" stroke-linecap="round"/><ellipse cx="186" cy="70" rx="12" ry="6" fill="#639922" transform="rotate(-25 186 70)"/><path d="M170 86c-26-14-62 0-62 40s30 56 62 46c32 10 62-6 62-46s-36-54-62-40z" fill="#E24B4A"/><g style="animation:popin 2.6s .4s infinite;transform-origin:center"><circle cx="234" cy="112" r="12" fill="#FCEBEB"/><circle cx="236" cy="132" r="12" fill="#FCEBEB"/><circle cx="230" cy="94" r="10" fill="#FCEBEB"/></g><text x="80" y="70" font-size="18" font-weight="700" fill="#791F1F" style="animation:fadeT 2.6s infinite">앙!</text>`),
+  will: S('#EEEDFE', `${ground('#AFA9EC')}<g style="animation:net 2.8s infinite;transform-origin:50% 100%"><path d="M282 132H326M282 148H326M282 164H326M293 122V182M304 122V182M315 122V182" stroke="#AFA9EC"/><rect x="278" y="120" width="50" height="62" fill="none" stroke="#534AB7" stroke-width="3" rx="2"/></g><text x="303" y="110" text-anchor="middle" font-size="15" font-weight="700" fill="#3C3489" style="animation:fadeT 2.8s infinite">골인!</text><circle cx="50" cy="112" r="14" fill="#534AB7"/><rect x="42" y="127" width="17" height="30" rx="7" fill="#7F77DD"/><line x1="47" y1="155" x2="42" y2="180" stroke="#534AB7" stroke-width="6" stroke-linecap="round"/><g style="animation:leg 2.8s infinite;transform-origin:0% 0%"><line x1="55" y1="155" x2="64" y2="180" stroke="#534AB7" stroke-width="6" stroke-linecap="round"/></g><g style="animation:ball 2.8s ease-in-out infinite">${sb(82,170,11,'#3C3489')}</g><text x="120" y="70" font-size="16" font-weight="700" fill="#3C3489">곧 찰 거야!</text>`),
+  up: S('#B5D4F4', `<g style="animation:sky 3s linear infinite"><ellipse cx="50" cy="0" rx="34" ry="12" fill="#fff" opacity=".85"/><ellipse cx="66" cy="-8" rx="18" ry="12" fill="#fff" opacity=".85"/></g><g style="animation:sky 4.2s 1.2s linear infinite"><ellipse cx="290" cy="0" rx="40" ry="13" fill="#fff" opacity=".85"/></g><g style="animation:sky 2.4s .6s linear infinite"><ellipse cx="250" cy="0" rx="22" ry="8" fill="#E6F1FB"/></g><g style="animation:sky 3.6s 2s linear infinite"><ellipse cx="95" cy="0" rx="26" ry="9" fill="#E6F1FB"/></g><g stroke="#fff" stroke-width="3" stroke-linecap="round"><line x1="150" y1="170" x2="150" y2="190" style="animation:ln .6s infinite"/><line x1="170" y1="174" x2="170" y2="196" style="animation:ln .6s .2s infinite"/><line x1="190" y1="170" x2="190" y2="190" style="animation:ln .6s .4s infinite"/></g><g style="animation:bob 1.2s ease-in-out infinite;transform-origin:center"><circle cx="170" cy="100" r="14" fill="#185FA5"/><rect x="161" y="115" width="18" height="26" rx="7" fill="#378ADD"/><line x1="163" y1="121" x2="146" y2="112" stroke="#185FA5" stroke-width="5" stroke-linecap="round"/><g style="animation:arm .6s infinite;transform-origin:0% 100%"><line x1="177" y1="121" x2="194" y2="94" stroke="#185FA5" stroke-width="5" stroke-linecap="round"/></g><ellipse cx="170" cy="150" rx="46" ry="15" fill="#fff"/><ellipse cx="148" cy="142" rx="20" ry="13" fill="#fff"/><ellipse cx="190" cy="141" rx="22" ry="14" fill="#fff"/></g>`),
+  about: S('#FAECE7', `${ground('#F0997B')}<circle cx="46" cy="130" r="16" fill="#993C1D"/><ellipse cx="54" cy="136" rx="5" ry="4" fill="#FAECE7" style="animation:mo .4s infinite;transform-origin:center"/><rect x="37" y="147" width="18" height="34" rx="7" fill="#D85A30"/><g style="animation:pulse 1.6s ease-in-out infinite;transform-origin:0% 100%"><path d="M70 136 L96 116 L96 50 Q96 26 120 26 L306 26 Q330 26 330 50 L330 134 Q330 158 306 158 L110 158 Z" fill="#fff" stroke="#993C1D" stroke-width="2"/><g style="animation:spin 2s linear infinite;transform-origin:center">${sb(160,92,24,'#712B13')}</g><rect x="214" y="68" width="76" height="48" fill="none" stroke="#712B13" stroke-width="3"/><path d="M233 68V116M252 68V116M271 68V116M214 84H290M214 100H290" stroke="#F0997B"/><text x="212" y="146" text-anchor="middle" font-size="13" fill="#712B13">축구 이야기 중</text></g>`),
+  hole: S('#E1F5EE', `<rect x="0" y="150" width="340" height="50" fill="#9FE1CB"/><ellipse cx="238" cy="152" rx="30" ry="9" fill="#04342C"/><g style="animation:rollin 3s ease-in infinite">${sb(70,138,12,'#04342C')}</g><text x="238" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="#085041" style="animation:fadeT 3s infinite">쏙!</text>`),
+  dome: S('#EEEDFE', `${ground('#AFA9EC')}<rect x="120" y="142" width="100" height="40" fill="#7F77DD"/><rect x="104" y="124" width="22" height="58" fill="#534AB7"/><rect x="214" y="124" width="22" height="58" fill="#534AB7"/><rect x="104" y="116" width="7" height="9" fill="#534AB7"/><rect x="119" y="116" width="7" height="9" fill="#534AB7"/><rect x="214" y="116" width="7" height="9" fill="#534AB7"/><rect x="229" y="116" width="7" height="9" fill="#534AB7"/><rect x="160" y="158" width="20" height="24" rx="10" fill="#26215C"/><g style="animation:drop 3.2s ease-out infinite"><path d="M128 142 A42 42 0 0 1 212 142 Z" fill="#AFA9EC" stroke="#534AB7" stroke-width="2"/><line x1="170" y1="100" x2="170" y2="84" stroke="#534AB7" stroke-width="2"/><path d="M170 84 L188 89 L170 94 Z" fill="#E24B4A" style="animation:flag .6s infinite;transform-origin:0% 50%"/></g>`),
+  mole: S('#FAEEDA', `<defs><clipPath id="mc"><rect x="0" y="0" width="340" height="154"/></clipPath></defs><rect x="0" y="152" width="340" height="48" fill="#C0DD97"/><g clip-path="url(#mc)"><g style="animation:up 2.6s ease-in-out infinite"><ellipse cx="170" cy="146" rx="24" ry="30" fill="#854F0B"/><ellipse cx="170" cy="136" rx="7" ry="5" fill="#ED93B1"/><g style="animation:blink 2.6s infinite;transform-origin:center"><circle cx="161" cy="126" r="3" fill="#2C2C2A"/><circle cx="179" cy="126" r="3" fill="#2C2C2A"/></g><ellipse cx="148" cy="148" rx="8" ry="5" fill="#BA7517"/><ellipse cx="192" cy="148" rx="8" ry="5" fill="#BA7517"/></g></g><ellipse cx="170" cy="154" rx="34" ry="8" fill="#412402"/>`)
+};
+
+const W = (w,pron,ko,sent,sko,hl=[],alt) => ({w,pron,ko,sent,sko,hl,alt});
+const DAYS = [
+  {d:'2026-09-30', pat:'-ot 소리 가족', words:[W('cot','캇','아기 침대','The baby is in the cot.','아기가 아기 침대에 있어요.',[1,2],'아기 침대가 흔들흔들'),W('hot','핫','뜨거운','The soup is hot!','수프가 뜨거워요!',[1,2],'뜨거운 수프에서 김이 나는 장면'),W('dot','닷','점','I see a red dot.','빨간 점이 보여요.',[1,2],'알록달록 점이 뿅뿅 나타나는 장면')]},
+  {d:'2026-10-02', pat:'Sight words', words:[W('all','올','모두','All the balls jump!','공이 모두 뛰어요!',[],'공 다섯 개가 다 같이 통통 튀는 장면'),W('had','해드','가졌었어 · 먹었어','I had a jelly.','나는 젤리를 먹었어요.',[],'젤리가 줄어들어 다 먹은 장면'),W('by','바이','옆에','Sit by me.','내 옆에 앉아.',[],'친구가 벤치 옆자리로 와서 앉는 장면')]},
+  {d:'2026-10-07', pat:'a_e 길게 소리', words:[W('cake','케이크','케이크','A big cake for me!','나를 위한 큰 케이크!',[1,3],'촛불이 흔들리는 케이크'),W('lake','레이크','호수','A duck on the lake.','호수 위의 오리.',[1,3],'호수 물결 위에 오리가 둥둥'),W('game','게임','게임','Let\'s play a game!','게임하자!',[1,3],'주사위 두 개가 데굴데굴')]},
+  {d:'2026-10-14', pat:'Sight words', words:[W('from','프럼','~에게서','A gift from Mom.','엄마에게서 온 선물.',[],'엄마가 아이에게 선물을 건네는 장면'),W('that','댓','저것','Look at that star!','저 별 좀 봐!',[],'아이가 저 멀리 별을 가리키는 장면'),W('this','디스','이것','This is my LEGO.','이건 내 레고야.',[],'아이 손에 있는 레고 블록')]},
+  {d:'2026-10-16', pat:'i_e 길게 소리', words:[W('hide','하이드','숨다','I hide in the box.','나는 상자에 숨어요.',[1,3],'상자 뒤에서 아이가 빼꼼 나왔다 숨는 장면'),W('ride','라이드','타다','I ride the bus.','나는 버스를 타요.',[1,3],'버스가 달려가는 장면'),W('bike','바이크','자전거','My bike is fast!','내 자전거는 빨라!',[1,3],'바퀴가 쌩쌩 도는 자전거')]},
+  {d:'2026-10-21', pat:'Sight words', words:[W('use','유즈','사용하다','I use a spoon.','나는 숟가락을 써요.',[],'숟가락으로 그릇을 뜨는 장면'),W('if','이프','만약 ~하면','If it rains, open it!','비가 오면 펼쳐!',[],'비가 오자 우산이 펼쳐지는 장면'),W('out','아웃','밖으로','The cat jumps out!','고양이가 밖으로 뛰어요!',[],'고양이가 상자 밖으로 폴짝 뛰는 장면')]},
+  {d:'2026-10-23', pat:'i_e 길게 소리', words:[W('line','라인','선','Draw a line.','선을 그려요.',[1,3],'구불구불 선이 그려지는 장면'),W('nine','나인','아홉','I see nine stars.','별이 아홉 개 보여요.',[1,3],'별이 하나씩 아홉 개까지 나타나는 장면'),W('bite','바이트','한 입 물다','Bite the apple!','사과를 한 입 깨물어!',[1,3],'사과에 한 입 자국이 생기는 장면')]},
+  {d:'2026-10-28', pat:'Sight words', words:[W('will','윌','~할 거야','I will kick the ball!','나는 공을 찰 거야!',[],'아이가 공을 차서 골대에 넣는 장면'),W('up','업','위로','Up, up, up to the sky!','위로, 위로, 하늘까지!',[],'아이가 구름을 타고 하늘로 올라가는 장면'),W('about','어바웃','~에 대한','I talk about soccer!','축구에 대해 말해요!',[],'말풍선 안에 축구공과 골대가 있는 장면')]},
+  {d:'2026-10-30', pat:'o_e 길게 소리', words:[W('hole','호울','구멍','The ball is in the hole!','공이 구멍에 들어갔어요!',[1,3],'공이 굴러 구멍에 쏙 들어가는 장면'),W('dome','도움','둥근 지붕','A dome on my castle!','내 성 위의 돔 지붕!',[1,3],'레고성 위에 돔 지붕이 내려앉는 장면'),W('mole','모울','두더지','A mole in a hole!','구멍 속 두더지!',[1,3],'구멍에서 두더지가 쏙 올라오는 장면')]},
+];
+const WD = ['일','월','화','수','목','금','토'];
+const fmt = s => { const [y,m,d]=s.split('-').map(Number); const dt=new Date(y,m-1,d); return `${m}/${d} (${WD[dt.getDay()]})`; };
+const $ = id => document.getElementById(id);
+
+let di = 0, wi = 0;
+(function initDay(){
+  let saved=null; try{saved=localStorage.getItem('wc-day')}catch(e){}
+  const n=new Date(), today=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  const si=DAYS.findIndex(x=>x.d===saved);
+  if(si>=0) di=si; else { const up=DAYS.findIndex(x=>x.d>=today); di = up>=0?up:DAYS.length-1; }
+})();
+DAYS.forEach((x,i)=>{const o=document.createElement('option');o.value=i;o.textContent=fmt(x.d)+' · '+x.words.map(w=>w.w).join(', ');$('dateSel').appendChild(o)});
+
+function render(){
+  const day=DAYS[di], it=day.words[wi], n=new Date();
+  const today=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  $('dayLabel').textContent=fmt(day.d);
+  $('daySub').textContent = day.d===today?'오늘 시험':(day.d>today?'다가오는 시험':'지난 시험 · 복습');
+  $('dateSel').value=di; $('prevDay').disabled=di===0; $('nextDay').disabled=di===DAYS.length-1;
+  $('chip').textContent=day.pat; $('count').textContent=`${wi+1} / 3`;
+  const w=$('word'); w.className='word'+(it.w==='up'?' rise':'');
+  w.innerHTML=[...it.w].map((c,i)=>`<span${it.hl.includes(i)?' class="hl"':''}>${c}</span>`).join('');
+  $('pron').textContent=`[${it.pron}] · ${it.ko}`;
+  const sc=SCENES[it.w]; $('stage').style.background=sc.bg; $('scene').innerHTML=sc.inner; $('stageTitle').textContent=it.alt;
+  $('sent').textContent=it.sent; $('ko').textContent=it.sko;
+  $('strip').innerHTML=day.words.map((x,i)=>`<button data-i="${i}" aria-current="${i===wi}">${x.w}</button>`).join('');
+  $('prevCard').disabled=wi===0; $('nextCard').disabled=wi===2;
+  try{localStorage.setItem('wc-day',day.d)}catch(e){}
+}
+function say(t,r){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=r;speechSynthesis.speak(u);}catch(e){}}
+const cur=()=>DAYS[di].words[wi];
+$('sayWord').onclick=()=>say(cur().w,.8);
+$('saySent').onclick=()=>say(cur().sent,.8);
+$('saySlow').onclick=()=>say(cur().w,.45);
+$('prevDay').onclick=()=>{if(di>0){di--;wi=0;render()}};
+$('nextDay').onclick=()=>{if(di<DAYS.length-1){di++;wi=0;render()}};
+$('dateSel').onchange=e=>{di=+e.target.value;wi=0;render()};
+$('prevCard').onclick=()=>{if(wi>0){wi--;render()}};
+$('nextCard').onclick=()=>{if(wi<2){wi++;render()}};
+$('strip').onclick=e=>{const b=e.target.closest('button');if(b){wi=+b.dataset.i;render()}};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowRight')$('nextCard').click();if(e.key==='ArrowLeft')$('prevCard').click();});
+let sx=null;const card=document.querySelector('.card');
+card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+card.addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)(dx<0?$('nextCard'):$('prevCard')).click();sx=null});
+render();
+</script>
+</body>
+</html>
