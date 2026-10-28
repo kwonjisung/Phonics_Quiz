@@ -73,8 +73,14 @@ select{font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1p
 .strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .strip button{font-family:var(--word);font-weight:700;font-size:22px;padding:10px 4px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .strip button[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.nav{display:flex;justify-content:space-between;gap:8px}
-.nav .btn{flex:1}
+.stagebox{position:relative}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:62%;max-height:150px;border:0;padding:0;background:transparent;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(20,30,60,.3))}
+.arrow::before{content:"";position:absolute;inset:0;background:rgba(255,255,255,.88)}
+.arrow.prev{left:6px}.arrow.prev::before{clip-path:polygon(100% 0,0 50%,100% 100%)}
+.arrow.next{right:6px}.arrow.next::before{clip-path:polygon(0 0,100% 50%,0 100%)}
+.arrow:hover::before{background:#fff}
+.arrow:active{transform:translateY(-50%) scale(.92)}
+.arrow:disabled{display:none}
 .note{font-size:12px;color:var(--muted);margin:0;text-align:center}
 button:focus-visible,select:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 svg *{transform-box:fill-box}
@@ -96,9 +102,10 @@ svg *{transform-box:fill-box}
   .foot{align-self:end;gap:8px;padding:8px 16px 12px}
   .sent{font-size:clamp(16px,4.5vh,22px)}
   .btn{padding:7px 12px}
-  .stage{grid-column:2;grid-row:1 / 5;width:100%;height:min(62vh,440px)}
+  .stagebox{grid-column:2;grid-row:1 / 5}
+  .stage{width:100%;height:min(62vh,440px)}
   .strip button{padding:6px 4px;font-size:19px}
-  .nav,.wrap > .note{display:none}
+  .wrap > .note{display:none}
 }
 @media (prefers-reduced-motion: reduce){*{animation:none!important}}
 /* scene keyframes */
@@ -157,7 +164,8 @@ svg *{transform-box:fill-box}
     <div class="wordbox"><div class="word" id="word">will</div>
       <div class="corner"><button class="say" id="sayWord" aria-label="단어 3번 듣기">🔊<span>×3</span></button></div></div>
     <p class="pron" id="pron">[윌] · ~할 거야</p>
-    <svg class="stage" id="stage" viewBox="0 0 340 200" role="img"><title id="stageTitle"></title><g id="scene"></g></svg>
+    <div class="stagebox"><svg class="stage" id="stage" viewBox="0 0 340 200" role="img"><title id="stageTitle"></title><g id="scene"></g></svg>
+      <button class="arrow prev" id="prevCard" aria-label="이전 단어"></button><button class="arrow next" id="nextCard" aria-label="다음 단어"></button></div>
     <div class="foot">
       <div class="sentrow"><div class="senttext"><p class="sent" id="sent"></p><p class="ko" id="ko"></p></div>
         <button class="say soft" id="saySent" aria-label="문장 듣기">🔊</button></div>
@@ -165,7 +173,6 @@ svg *{transform-box:fill-box}
   </article>
 
   <div class="strip" id="strip"></div>
-  <div class="nav"><button class="btn" id="prevCard">‹ 이전 단어</button><button class="btn" id="nextCard">다음 단어 ›</button></div>
   <p class="note">주황색 글자는 같은 소리 규칙이에요. 끝에 e가 붙으면 앞 모음이 자기 이름 소리로 길어져요.</p>
 </div>
 
