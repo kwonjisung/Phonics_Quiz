@@ -32,7 +32,8 @@
   --accent:#FF8A5E; --accent-soft:#3A2620; --brand:#8FA6FF; --brand-soft:#26304F; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 28px}
-.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px;overflow-x:clip}
+.card{will-change:transform;touch-action:pan-y}
 header{display:flex;flex-direction:column;gap:10px}
 h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;text-wrap:balance}
 .titlerow{display:flex;align-items:center;gap:8px}
@@ -305,13 +306,46 @@ document.addEventListener('fullscreenchange',()=>{$('fsBtn').textContent=documen
 $('prevDay').onclick=()=>{if(di>0){di--;wi=0;render()}};
 $('nextDay').onclick=()=>{if(di<DAYS.length-1){di++;wi=0;render()}};
 $('dateSel').onchange=e=>{di=+e.target.value;wi=0;render()};
-$('prevCard').onclick=()=>{if(wi>0){wi--;render()}};
-$('nextCard').onclick=()=>{if(wi<2){wi++;render()}};
-$('strip').onclick=e=>{const b=e.target.closest('button');if(b){wi=+b.dataset.i;render()}};
-document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowRight')$('nextCard').click();if(e.key==='ArrowLeft')$('prevCard').click();});
-let sx=null;const card=document.querySelector('.card');
-card.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
-card.addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)(dx<0?$('nextCard'):$('prevCard')).click();sx=null});
+// 카드 넘기기: 옆으로 밀려 나가고 반대쪽에서 들어오는 슬라이드
+const card=document.querySelector('.card');
+const still=matchMedia('(prefers-reduced-motion: reduce)');
+let busy=false;
+function go(n){
+  if(busy||n===wi||n<0||n>2) return;
+  const dir=n>wi?1:-1;
+  if(still.matches){wi=n;render();return}
+  busy=true;
+  card.style.transition='transform .2s ease-in, opacity .2s ease-in';
+  card.style.transform=`translateX(${-dir*75}%) rotate(${-dir*3}deg)`; card.style.opacity='0';
+  setTimeout(()=>{
+    wi=n; render();
+    card.style.transition='none'; card.style.transform=`translateX(${dir*75}%) rotate(${dir*3}deg)`;
+    void card.offsetWidth;
+    card.style.transition='transform .32s cubic-bezier(.2,.9,.25,1), opacity .25s ease-out';
+    card.style.transform=''; card.style.opacity='';
+    setTimeout(()=>{busy=false},320);
+  },200);
+}
+$('prevCard').onclick=()=>go(wi-1);
+$('nextCard').onclick=()=>go(wi+1);
+$('strip').onclick=e=>{const b=e.target.closest('button');if(b)go(+b.dataset.i)};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowRight')go(wi+1);if(e.key==='ArrowLeft')go(wi-1);});
+// 손가락으로 끌면 카드가 따라오고, 충분히 밀면 넘어감
+let sx=null,sy=0,drag=false,dx=0;
+card.addEventListener('touchstart',e=>{if(busy)return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;drag=false;dx=0},{passive:true});
+card.addEventListener('touchmove',e=>{
+  if(sx===null)return;
+  const x=e.touches[0].clientX-sx, y=e.touches[0].clientY-sy;
+  if(!drag){ if(Math.abs(x)>10&&Math.abs(x)>Math.abs(y)) drag=true; else if(Math.abs(y)>10){sx=null;return} else return; }
+  dx=((x>0&&wi===0)||(x<0&&wi===2))?x*.25:x;
+  card.style.transition='none'; card.style.transform=`translateX(${dx}px) rotate(${dx/40}deg)`;
+},{passive:true});
+card.addEventListener('touchend',()=>{
+  if(sx===null)return; sx=null; if(!drag)return;
+  const n=dx<0?wi+1:wi-1;
+  if(Math.abs(dx)>60&&n>=0&&n<=2) go(n);
+  else {card.style.transition='transform .25s ease-out';card.style.transform=''}
+});
 render();
 </script>
 </body>
